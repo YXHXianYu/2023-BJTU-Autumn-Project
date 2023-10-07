@@ -1,0 +1,7 @@
+
+spring:
+  datasource:
+    username: root
+    password: 20021012
+    url: jdbc:mysql://localhost:3306/peer_learning_system
+    driver-class-name: com.mysql.cj.jdbc.Driver
