@@ -1,4 +1,4 @@
-package pojo;
+package com.yxhxianyu.peerlearningsystem.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -7,11 +7,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.intellij.lang.annotations.JdkConstants;
 
-import java.sql.Date;
 
 /**
+ * Pojo类只储存信息，不做任何其他操作（如构造函数等）
+ * 所有操作应该在DAO中完成
  * @author YXH_XianYu
  * @date 2023/10/7 22:33
  **/
