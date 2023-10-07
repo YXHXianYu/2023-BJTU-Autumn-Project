@@ -68,3 +68,8 @@ CREATE TABLE rating
     FOREIGN KEY (`homeworkUUID`) REFERENCES homework(`uuid`),
     FOREIGN KEY (`userUUID`) REFERENCES user(`uuid`)
 );
+
+--
+-- 此外，我在navicat中，手动设置了以下属性为 unique
+--     user(username), problem(name)
+--
