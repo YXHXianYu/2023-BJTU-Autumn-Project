@@ -7,6 +7,7 @@ import com.yxhxianyu.peerlearningsystem.pojo.ProblemPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -29,8 +30,8 @@ public class GroupHomeworkService {
     public static int HOMEWORK_STATE_START_RATING = 1;
 
     /**
-     * 插入一个新的GroupHomework
-     * 并返回这个GroupHomework的UUID
+     * 插入一个新的GroupHomework。
+     * 并返回这个GroupHomework的UUID，
      * 若insert失败，则返回空字符串
      */
     public String insertGroupHomework(String name, String problemUUID, Date submitDeadline, Date ratingDeadline) {
@@ -95,6 +96,7 @@ public class GroupHomeworkService {
     /**
      * 根据UUID查询GroupHomework
      */
+    @Nullable
     public GroupHomeworkPojo getGroupHomeworkByUUID(String uuid) {
         return groupHomeworkDao.selectById(uuid);
     }
@@ -102,6 +104,7 @@ public class GroupHomeworkService {
     /**
      * 根据名称查询GroupHomework
      */
+    @Nullable
     public GroupHomeworkPojo getGroupHomeworkByName(String name) {
         return groupHomeworkDao.selectOne(new QueryWrapper<GroupHomeworkPojo>().eq("name", name));
     }

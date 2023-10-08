@@ -7,6 +7,7 @@ import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class UserService {
     /**
      * 插入一条新的用户
      * 并返回该用户的UUID
-     * 若insert失败，则返回空字符串
+     * 若insert失败，则返回以"ERROR"开头的字符串
      */
     public String insertUser(String username, String password, String email, int authority) {
         String uuid = UUID.randomUUID().toString();
@@ -35,10 +36,11 @@ public class UserService {
             return uuid;
         } catch (DuplicateKeyException e) {
             System.out.println("Insert failed: duplicate username");
+            return "ERROR: 用户名重复";
         } catch (DataIntegrityViolationException e) {
             System.out.println("Insert failed: data integrity violation (maybe data is too long)");
+            return "ERROR: 数据不合法 (可能因为数据过长)";
         }
-        return "";
     }
 
     /**
@@ -63,6 +65,7 @@ public class UserService {
     /**
      * 根据UUID查询一条用户信息
      */
+    @Nullable
     public UserPojo getUserByUUID(String uuid) {
         return userDao.selectById(uuid);
     }
@@ -70,6 +73,7 @@ public class UserService {
     /**
      * 根据名字查询一条用户信息
      */
+    @Nullable
     public UserPojo getUserByName(String username) {
         return userDao.selectOne(new QueryWrapper<UserPojo>().eq("username", username));
     }

@@ -6,6 +6,7 @@ import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -60,6 +61,7 @@ public class HomeworkService {
     /**
      * 根据UUID查询作业
      */
+    @Nullable
     public HomeworkPojo getHomeworkByUUID(String uuid) {
         return homeworkDao.selectById(uuid);
     }
@@ -67,6 +69,7 @@ public class HomeworkService {
     /**
      * 根据GroupHomeworkUUID和UserUUID查询作业
      */
+    @Nullable
     public HomeworkPojo getHomeworkByTwoUUID(String groupHomeworkUUID, String userUUID) {
         return homeworkDao.selectOne(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("userUUID", userUUID));
     }

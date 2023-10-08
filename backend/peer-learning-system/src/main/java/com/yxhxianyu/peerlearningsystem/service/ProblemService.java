@@ -8,6 +8,7 @@ import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -92,6 +93,7 @@ public class ProblemService {
     /**
      * 根据UUID查询problem
      */
+    @Nullable
     public ProblemPojo getProblemByUUID(String uuid) {
         return problemDao.selectById(uuid);
     }
@@ -99,6 +101,7 @@ public class ProblemService {
     /**
      * 根据名字查询problem
      */
+    @Nullable
     public ProblemPojo getProblemByName(String name) {
         return problemDao.selectOne(new QueryWrapper<ProblemPojo>().eq("name", name));
     }
