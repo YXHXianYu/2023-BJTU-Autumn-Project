@@ -48,7 +48,7 @@ CREATE TABLE homework
     `groupHomeworkUUID` VARCHAR(64),
     `userUUID` VARCHAR(64),
     `answer` TEXT,
-    `isExcellentWork` TINYINT(1),
+    `isExcellentHomework` TINYINT(1),
     `haveChecked` TINYINT(1),
     `checkedScore` FLOAT,
 
@@ -71,5 +71,5 @@ CREATE TABLE rating
 
 --
 -- 此外，我在navicat中，手动设置了以下属性为 unique
---     user(username), problem(name)
+--     user(username), problem(name), grouphomework(name)
 --

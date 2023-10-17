@@ -24,10 +24,16 @@ public class UserController {
     @RequestMapping(value = "/api/register", method = RequestMethod.POST)
     public String register(@RequestParam("username") String username,
                            @RequestParam("password") String password,
-                           @RequestParam("email") String email) {
+                           @RequestParam("email") String email,
+                           @RequestParam("isTeacher") boolean isTeacher) {
         String encodedPassword = Util.passwordEncoder(password);
 
-        String uuid = userService.insertUser(username, encodedPassword, email, 0);
+        String uuid;
+        if(isTeacher) {
+            uuid = userService.insertUser(username, encodedPassword, email, 1);
+        } else {
+            uuid = userService.insertUser(username, encodedPassword, email, 0);
+        }
 
         if(uuid.startsWith("ERROR")) {
             return Util.getResponse(422, uuid);

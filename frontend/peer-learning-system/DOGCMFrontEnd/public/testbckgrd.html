@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #a {
+            background-image: url('../src/assets/background.webp');
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            position: absolute;
+            padding: 0px;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+<!--
+    height和width只是设置标签的大小，标签的距离通过top和left属性设置
+    absolute相对于已经定位包含关系最近的祖先元素(body相对于网页)
+    relative则是相对于元素自身正常的初始位置而言，也就是理论上正常的位置而言
+-->
+<div id="a">
+</div>
+</body>
+
+</html>
