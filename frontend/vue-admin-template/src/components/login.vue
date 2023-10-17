@@ -140,9 +140,6 @@ export default {
       //   this.loading = false
       // })
 
-      // return
-      this.$router.push('/')
-
       // 发送登录请求
       await axios.post('http://localhost:8080/api/login', qs.stringify({
         username: this.infoForm.username,
@@ -155,7 +152,7 @@ export default {
         if (response.data.code === 200) {
           // this.$store.dispatch('user/login', response.data.data.token).then(() => {
           // this.$router.push({ path: this.redirect || '/' })
-          this.$router.push('/')
+          this.$router.push('/main')
           // this.loading = false
           // })
         } else { // 登陆失败
