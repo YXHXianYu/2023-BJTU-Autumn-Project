@@ -33,6 +33,11 @@ export default new Router({
             component: () => import('./components/register.vue')
         },
         {
+            path: '/registerProtectedUser',
+            name: '注册',
+            component: () => import('./components/registerProtectedUser.vue')
+        },
+        {
             path: '/test1',
             name: 'CommittedContract',
             component: () => import('./components/CommittedContract.vue')

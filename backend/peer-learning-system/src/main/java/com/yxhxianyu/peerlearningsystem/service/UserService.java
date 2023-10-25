@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yxhxianyu.peerlearningsystem.dao.UserDao;
 import com.yxhxianyu.peerlearningsystem.pojo.ProblemPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
+import com.yxhxianyu.peerlearningsystem.utils.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -76,6 +77,18 @@ public class UserService {
     @Nullable
     public UserPojo getUserByName(String username) {
         return userDao.selectOne(new QueryWrapper<UserPojo>().eq("username", username));
+    }
+
+    /**
+     * 根据token查询一条用户信息
+     */
+    @Nullable
+    public UserPojo getUserByToken(String token) {
+        try {
+            return getUserByName(Util.tokenDecoder(token));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**

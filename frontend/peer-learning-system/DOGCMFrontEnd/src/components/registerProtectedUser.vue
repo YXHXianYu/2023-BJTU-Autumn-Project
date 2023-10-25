@@ -1,7 +1,7 @@
 <template>
     <div class="register">
 
-        <h1 style="text-align: center">注册</h1>
+        <h1 style="text-align: center">注册受限用户</h1>
         <el-form ref="registerForm" :model="registerForm" :rules="rules" label-width="100px">
             <el-form-item label="邮箱: " prop="email">
                 <el-input v-model="registerForm.email" placeholder="请输入邮箱"></el-input>
@@ -15,9 +15,11 @@
                 <el-input v-model="registerForm.password" placeholder="请输入密码" show-password clearable></el-input>
             </el-form-item>
 
-            <!-- <el-form-item label="Sensei: " prop="passwdagain">
-                <el-checkbox v-model="registerForm.isTeacher"></el-checkbox>
-            </el-form-item> -->
+            <el-tooltip class="item" effect="dark" content="老师只能布置作业等，管理员才拥有注册受限用户的权限" placement="bottom">
+                <el-form-item label="是否为管理员: " prop="passwdagain">
+                    <el-checkbox v-model="registerForm.isAdministrator"></el-checkbox>
+                </el-form-item>
+            </el-tooltip>
 
             <el-form-item label-width="0px">
                 <el-button size="medium" style="border-color: #ffffff; margin-right: 43%; left: 0px;" @click="clickLogin">登录</el-button>
@@ -30,6 +32,7 @@
 
 <script>
 import qs from 'qs'
+import SessionStorageService from "../sessionStorageService.js"
 
 export default {
     name: "register",
@@ -42,8 +45,8 @@ export default {
             registerForm: {
                 email:'2943003@qq.com',
                 username: 'Guest',
-                password: '114514',
-                isTeacher: 0
+                password: '20021012',
+                isAdministrator: false
             },
             rules: {
                 username: [
@@ -77,14 +80,19 @@ export default {
             this.$refs["registerForm"].validate((valid) => {
                 if(valid) {
                     //alert("valid"+this.$registerUrl);//http://localhost:10087/user/register
+
+                    window.console.log("token: ", SessionStorageService.get('token'))
+
                     const data = qs.stringify({
-                        email: this.registerForm.email,//邮箱
+                        token: SessionStorageService.get('token'),
+                        email: this.registerForm.email,
                         username: this.registerForm.username,
                         password: this.registerForm.password,
-                        isTeacher: this.registerForm.isTeacher,
+                        isAdministrator: this.registerForm.isAdministrator,
                     })
+
                     this.$axios({
-                        url: "http://localhost:8080/api/register",
+                        url: (this.registerForm.isAdministrator === false ? "http://localhost:8080/api/register_teacher" : "http://localhost:8080/api/register_administrator"),
                         method: 'post',
                         data: data,
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -97,6 +105,9 @@ export default {
                     }).catch(error => {
                         window.console.log("error: ", error)
                     })
+
+
+
                     // console.log('success')
                 } else {
                     this.text = "创建账户";

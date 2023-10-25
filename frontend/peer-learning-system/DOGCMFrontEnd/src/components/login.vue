@@ -22,6 +22,7 @@
 
 <script>
 import qs from "qs"
+import SessionStorageService from "../sessionStorageService.js"
 
 export default {
     name: "login",
@@ -80,21 +81,25 @@ export default {
                         window.console.log("state", response.data)
 
                         if(response.data.code == 200) {
-                            this.text = "";
-                            this.isLoading = true;
-                            this.state = response.data.state;
-                            this.group = response.data.group;
-                            this.$store.state.username = this.form.username;
-                            this.$store.state.password = this.form.password;
-                            this.$store.state.token = response.data.token;
-                            this.$store.state.group = response.data.group;
-                            this.loginProcess();
+                            // this.text = "登陆";
+                            // this.isLoading = true;
+                            // this.state = response.data.state;
+                            // this.group = response.data.group;
+                            // this.$store.state.username = this.form.username;
+                            // this.$store.state.password = this.form.password;
+                            // this.$store.setters.setToken(response.data.data.token)
+                            // this.$store.state.group = response.data.group;
+                            // this.loginProcess();
+
+                            SessionStorageService.save('token', response.data.data.token)
                         } else {
                             window.alert(
                                 'code: ' + response.data.code + '\n' +
                                 'message: ' + response.data.message
                             )
                         }
+
+                        window.console.log("token: ", SessionStorageService.get('token'))
                     })
                 } else {
                     this.text = "登录";

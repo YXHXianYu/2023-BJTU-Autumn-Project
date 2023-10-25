@@ -91,9 +91,30 @@ public class Util {
      * @param token token
      * @return 用户名
      */
-    public static String tokenDecoder(String token) {
+    public static String tokenDecoder(String token) throws IllegalArgumentException {
         return new String(Base64.getDecoder().decode(token));
     }
 
+    /* ----- ----- 权限 ----- ----- */
+
+    /* 只有Login和Register不需要权限，其他API都需要权限 */
+    public static final int AUTHORITY_STUDENT = 0;
+    public static final int AUTHORITY_TEACHER = 1;
+    public static final int AUTHORITY_ADMINISTRATOR = 2;
+
+    public static final int NEEDED_AUTHORITY_REGISTER_TEACHER = 2;
+    public static final int NEEDED_AUTHORITY_REGISTER_ADMINISTRATOR = 2;
+
+    public static boolean haveAuthority(int authority, int neededAuthority) {
+        return authority >= neededAuthority;
+    }
+
+    public static Object checkAuthority(int authority, int neededAuthority) {
+        if(haveAuthority(authority, neededAuthority)) {
+            return new Ok();
+        } else {
+            return getResponse(403, "该用户没有权限");
+        }
+    }
 
 }

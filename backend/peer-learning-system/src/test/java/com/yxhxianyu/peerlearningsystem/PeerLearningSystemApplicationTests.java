@@ -6,6 +6,7 @@ import com.yxhxianyu.peerlearningsystem.pojo.GroupHomeworkPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.RatingPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import com.yxhxianyu.peerlearningsystem.service.*;
+import com.yxhxianyu.peerlearningsystem.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,13 @@ class PeerLearningSystemApplicationTests {
 
 	@Autowired
 	RatingService ratingService;
+
+	/* Util Test */
+	@Test
+	void passwordTest() {
+		String password = "20021012";
+		System.out.println(Util.passwordEncoder(password));
+	}
 
 	@Test
 	void groupHomeworkTest() {
