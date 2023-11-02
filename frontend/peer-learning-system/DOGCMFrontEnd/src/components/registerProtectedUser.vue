@@ -22,7 +22,7 @@
             </el-tooltip>
 
             <el-form-item label-width="0px">
-                <el-button size="medium" style="border-color: #ffffff; margin-right: 43%; left: 0px;" @click="clickLogin">登录</el-button>
+                <el-button size="medium" style="border-color: #ffffff; margin-right: 43%; left: 0px;" @click="clickReturn">返回</el-button>
                 <el-button type="primary" size="medium" :loading = "isLoading"  @click="clickRegister">{{text}}</el-button>
             </el-form-item>
 
@@ -121,9 +121,8 @@ export default {
                 }
             })
         },
-
-        clickLogin() {
-            this.$router.push("/login")
+        clickReturn() {
+            this.$router.push("/main")
         }
     }
 }

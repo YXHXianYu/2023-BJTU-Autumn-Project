@@ -31,6 +31,10 @@ public class ProblemService {
      * 若insert失败，则返回空字符串
      */
     public String insertProblem(String name, String content, String standardAnswer) {
+        if(name.isEmpty()) {
+            return "";
+        }
+
         String uuid = UUID.randomUUID().toString();
         try {
             problemDao.insert(new ProblemPojo(uuid, name, content, standardAnswer));
@@ -53,11 +57,16 @@ public class ProblemService {
 
     /**
      * 根据名称删除一条问题
+     * 若删除成功，则返回true
      */
-    public void deleteProblemByName(String username) {
+    public boolean deleteProblemByName(String username) {
         ProblemPojo pojo = getProblemByName(username);
-        if(pojo != null)
+        if(pojo != null) {
             problemDao.deleteById(pojo.getUuid());
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

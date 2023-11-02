@@ -91,7 +91,9 @@ export default {
                             // this.$store.state.group = response.data.group;
                             // this.loginProcess();
 
-                            SessionStorageService.save('token', response.data.data.token)
+                            SessionStorageService.set('token', response.data.data.token)
+
+                            this.$router.push('/main')
                         } else {
                             window.alert(
                                 'code: ' + response.data.code + '\n' +

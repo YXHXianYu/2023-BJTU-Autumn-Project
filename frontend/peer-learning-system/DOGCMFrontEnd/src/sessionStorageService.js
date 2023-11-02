@@ -1,5 +1,5 @@
 class SessionStorageService {
-  static save(key, data) {
+  static set(key, data) {
     sessionStorage.setItem(key, JSON.stringify(data));
   }
 
