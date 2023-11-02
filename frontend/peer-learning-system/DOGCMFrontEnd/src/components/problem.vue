@@ -27,11 +27,11 @@
             </el-form-item>
 
             <el-form-item label="题目内容: " prop="content" style="margin-right: 30px;">
-                <el-input type="textarea" :autosize="{minRows: 2}" v-model="problemForm.content" placeholder="请输入题目内容"></el-input>
+                <el-input type="textarea" :autosize="{minRows: 2, maxRows: 10}" v-model="problemForm.content" placeholder="请输入题目内容" class="scrollable-textarea"></el-input>
             </el-form-item>
 
             <el-form-item label="题目答案: " prop="standardAnswer" style="margin-right: 30px;">
-                <el-input type="textarea" :autosize="{minRows: 2}" v-model="problemForm.standardAnswer" placeholder="请输入题目内容"></el-input>
+                <el-input type="textarea" :autosize="{minRows: 2, maxRows: 4}" v-model="problemForm.standardAnswer" placeholder="请输入题目内容"></el-input>
             </el-form-item>
 
             <el-form-item label-width="0px">
@@ -42,8 +42,10 @@
 
         <el-dialog title="详细信息" :visible.sync="dialogFormVisible" width="70%" append-to-body>
             <span>题目名称：{{dialogName}}</span><br><br>
-            <span>题目内容：{{dialogContent}}</span><br><br>
-            <span>题目答案：{{dialogStandardAnswer}}</span><br><br>
+            <span>题目内容：</span><br><br>
+            <div v-html="dialogContent"></div><br>
+            <span>题目答案：</span><br><br>
+            <div v-html="dialogStandardAnswer"></div><br>
         </el-dialog>
     </div>
 </template>
@@ -98,8 +100,9 @@ export default {
                 data: qs.stringify({
                     token: SessionStorageService.get("token"),
                     name: this.problemForm.name,
-                    content: this.problemForm.content,
-                    standardAnswer: this.problemForm.standardAnswer,
+                    // content: this.problemForm.content,
+                    content: this.problemForm.content.replace(/\n/g, "<br>"),
+                    standardAnswer: this.problemForm.standardAnswer.replace(/\n/g, "<br>"),
                 }),
             }).then(response => {
                 window.console.log("state", response.data)
@@ -144,6 +147,15 @@ export default {
                 window.console.log("error: ", error)
             })
         },
+        // addWheelListener(event) {
+        //     event.target.addEventListener('wheel', this.handleWheel)
+        // },
+        // removeWheelListener(event) {
+        //     event.target.removeWheelListener('wheel', this.handleWheel)
+        // },
+        // handleWheel(event) {
+
+        // },
     }
 }
 </script>
@@ -157,10 +169,13 @@ export default {
         transform: translate(-50%, -50%);
         width: 50rem;
         position: absolute;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.8);
         /* padding: 20px 20px 10px 20px; */
         border-radius: 10px;
         /* box-shadow: 0px 15px 25px 0px rgba(0, 0, 0, 0.11); */
+    }
+    .scrollable-textarea {
+        overflow-y: auto;
     }
 
 </style>

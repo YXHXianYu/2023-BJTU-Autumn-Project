@@ -3,15 +3,15 @@
 
         <h1 style="text-align: center">注册</h1>
         <el-form ref="registerForm" :model="registerForm" :rules="rules" label-width="100px">
-            <el-form-item label="邮箱: " prop="email">
+            <!-- <el-form-item label="邮箱: " prop="email">
                 <el-input v-model="registerForm.email" placeholder="请输入邮箱"></el-input>
-            </el-form-item>
+            </el-form-item> -->
 
-            <el-form-item label="用户名: " prop="name">
+            <el-form-item label="用户名: " prop="username">
                 <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
             </el-form-item>
 
-            <el-form-item label="密码: " prop="passwd">
+            <el-form-item label="密码: " prop="password">
                 <el-input v-model="registerForm.password" placeholder="请输入密码" show-password clearable></el-input>
             </el-form-item>
 
@@ -47,22 +47,14 @@ export default {
             },
             rules: {
                 username: [
-                    {
-                        required: true, message: "请输入用户名", trigger: 'blur'
-                    },
+                    { required: true, message: "请输入用户名", trigger: 'blur' },
                 ],
                 email: [//如果为空就显示message
-                    {
-                        required: true, message: "请输入email", trigger: 'blur'
-                    },
+                    { required: true, message: "请输入email", trigger: 'blur' },
                 ],
                 password: [
-                    {
-                        required: true, message: "请输入密码", trigger: 'blur'
-                    },
-                    {
-                        min: 6, message: "密码必须大于6", trigger: 'blur'
-                    }
+                    { required: true, message: "请输入密码", trigger: 'blur' },
+                    { min: 6, message: "密码必须大于6", trigger: 'blur' }
                 ]
             },
         }
@@ -70,9 +62,6 @@ export default {
 
     methods: {
         clickRegister() {
-            if (this.isLoading) {
-                this.text = ""
-            }
             //获取到的是添加了ref="registerForm"属性的这个组件 前端判断
             this.$refs["registerForm"].validate((valid) => {
                 if(valid) {
@@ -99,13 +88,6 @@ export default {
                     })
                     // console.log('success')
                 } else {
-                    this.text = "创建账户";
-                    this.isLoading = false;
-                    this.$alert('账号不成立！', '警告', {
-                        confirmButtonText: '确定',
-                        callback: {
-                        }
-                    });
                     return false;
                 }
             })
@@ -125,9 +107,9 @@ export default {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 25rem;
+        width: 20rem;
         position: absolute;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.8);
         padding: 20px 20px 10px 20px;
         border-radius: 10px;
         box-shadow: 0px 15px 25px 0px rgba(0, 0, 0, 0.11);

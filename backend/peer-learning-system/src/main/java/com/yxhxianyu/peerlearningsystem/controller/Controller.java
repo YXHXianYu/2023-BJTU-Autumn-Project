@@ -55,6 +55,8 @@ public class Controller {
 
         String uuid = userService.insertUser(username, encodedPassword, email, Util.AUTHORITY_STUDENT);
 
+        System.out.println("uuid:" + uuid);
+
         if(uuid.startsWith("ERROR")) {
             return Util.getResponse(422, uuid);
         } else {

@@ -9,7 +9,7 @@ const router = new Router({
     routes: [
         {
             path: '/',
-            name: 'main',
+            name: 'default',
             component: () => import('./components/main.vue')
         },
         {

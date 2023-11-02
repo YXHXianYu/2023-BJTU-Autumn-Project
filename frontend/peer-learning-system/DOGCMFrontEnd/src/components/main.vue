@@ -59,7 +59,7 @@ export default {
         transform: translate(-50%, -50%);
         width: 50rem;
         position: absolute;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.8);
         border-radius: 10px;
     }
 </style>

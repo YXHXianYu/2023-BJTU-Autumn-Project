@@ -3,7 +3,7 @@
 
         <h1 style="text-align: center">登录</h1>
         <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-            <el-form-item label="用户名：" prop="name">
+            <el-form-item label="用户名：" prop="username">
                 <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
             </el-form-item>
 
@@ -39,17 +39,11 @@ export default {
             },
             rules: {
                 username: [
-                    {
-                        required: true, message: "请输入用户名", trigger: 'blur'
-                    },
+                    { required: true, message: "请输入用户名", trigger: 'blur' },
                 ],
                 password: [
-                    {
-                        required: true, message: "请输入密码", trigger: 'blur'
-                    },
-                    {
-                        min: 6, message: "密码必须大于6", trigger: 'blur'
-                    }
+                    { required: true, message: "请输入密码", trigger: 'blur' },
+                    { min: 6, message: "密码必须大于6", trigger: 'blur' }
                 ]
             },
         }
