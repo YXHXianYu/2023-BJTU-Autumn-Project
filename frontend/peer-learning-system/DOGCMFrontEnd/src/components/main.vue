@@ -7,9 +7,11 @@
       <el-row :gutter="20">
         <el-col :span="8" :offset="8">
           <el-card align="center">
-            <el-button class="button-margin" type="primary" size="medium" @click="clickProblem" plain>题目管理</el-button>
-            <el-button class="button-margin" type="primary" size="medium" @click="clickRegisterProtectedUser" plain>注册受保护用户</el-button>
-            <el-button class="button-margin" type="primary" size="medium" @click="clickLogout" plain>登出</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="problem" plain>题目管理</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="homework" plain>作业管理</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="sumbitHomework" plain>提交作业</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="registerProtectedUser" plain>注册受保护用户</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="logout" plain>登出</el-button>
           </el-card>
         </el-col>
       </el-row>
@@ -27,16 +29,22 @@ export default {
         }
     },
     methods: {
-        clickProblem() {
-            this.$router.push("/problem")
+        problem() {
+          this.$router.push("/problem")
         },
-        clickRegisterProtectedUser() {
-            this.$router.push("/registerProtectedUser")
+        homework() {
+          this.$router.push('/homework')
         },
-        clickLogout() {
+        sumbitHomework() {
+          this.$router.push("/submitHomework")
+        },
+        registerProtectedUser() {
+          this.$router.push("/registerProtectedUser")
+        },
+        logout() {
             SessionStorageService.remove("token")
             this.$router.push("/login")
-        }
+        },
     }
 }
 </script>

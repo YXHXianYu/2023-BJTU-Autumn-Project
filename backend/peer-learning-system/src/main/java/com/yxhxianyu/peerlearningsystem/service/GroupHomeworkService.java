@@ -43,6 +43,7 @@ public class GroupHomeworkService {
             System.out.println("Insert failed: duplicate username, name is \"" + name + "\"");
         } catch (DataIntegrityViolationException e) {
             System.out.println("Insert failed: data integrity violation (maybe data is too long or foreign key not exists), name is \"" + name + "\"");
+            System.out.println("Details: " + e.getMessage());
         }
         return "";
     }

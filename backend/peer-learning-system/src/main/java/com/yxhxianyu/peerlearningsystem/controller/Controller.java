@@ -1,5 +1,6 @@
 package com.yxhxianyu.peerlearningsystem.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.ProblemPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author YXH_XianYu
@@ -156,6 +159,22 @@ public class Controller {
             System.out.println("注册：" + username + " 成功");
             return Util.getOkResponse("注册成功");
         }
+    }
+
+    /**
+     * 获取所有用户信息
+     */
+    @RequestMapping(value = "/api/user/get_all", method = RequestMethod.POST)
+    public String getAllUsers(@RequestParam("token") String token) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        return Util.getOkResponse("获取成功", userService.getAllUsers());
     }
 
     /* ----- ----- Problem ----- ----- */
@@ -346,6 +365,78 @@ public class Controller {
     /* ----- ----- Group Homework ----- ----- */
 
     /**
+     * 添加一个小组作业，并将指定成员添加进该小组作业
+     */
+    @RequestMapping(value = "/api/create_group_homework", method = RequestMethod.POST)
+    public String createGroupHomework(@RequestParam("token") String token,
+                                      @RequestParam("groupHomeworkName") String groupHomeworkName,
+                                      @RequestParam("problemName") String problemName,
+                                      @RequestParam("submitDeadline") String submitDeadline,
+                                      @RequestParam("ratingDeadline") String ratingDeadline,
+                                      @RequestParam("students") String studentsString) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        // 通过token得到user实体
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        // 通过user实体来检验权限
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        ObjectMapper mapper = new ObjectMapper();
+        String[] students;
+        try {
+            students = mapper.readValue(studentsString, String[].class);
+        } catch (Exception e) {
+            return Util.getResponse(422, "学生名单格式错误");
+        }
+
+        // System.out.println(submitDeadline);
+        Date submitDeadlineDate;
+        try {
+            submitDeadlineDate = Date.valueOf(submitDeadline.substring(0, 10));
+        } catch (IllegalArgumentException e) {
+            return Util.getResponse(422, "提交截止日期格式错误");
+        }
+        Date ratingDeadlineDate;
+        try {
+            ratingDeadlineDate = Date.valueOf(ratingDeadline.substring(0, 10));
+        } catch (IllegalArgumentException e) {
+            return Util.getResponse(422, "评分截止日期格式错误");
+        }
+
+        String problemUUID = problemService.getProblemByName(problemName).getUuid();
+        String uuid = groupHomeworkService.insertGroupHomework(groupHomeworkName, problemUUID, submitDeadlineDate, ratingDeadlineDate);
+        if(uuid.isEmpty()) {
+            return Util.getResponse(422, "添加失败");
+        } else {
+            for(String student : students) {
+                homeworkService.insertHomework(uuid, student);
+            }
+            return Util.getOkResponse("添加成功");
+        }
+    }
+
+    /**
+     * 获取所有小组作业
+     */
+    @RequestMapping(value = "/api/group_homework/get_all", method = RequestMethod.POST)
+    public String getAllGroupHomeworks(@RequestParam("token") String token) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        // 通过token得到user实体
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        // 通过user实体来检验权限
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        return Util.getOkResponse("获取成功", groupHomeworkService.getAllGroupHomeworks());
+    }
+
+    /**
      * 添加一个小组作业
      * @param token 提出请求的用户token
      * @param groupHomeworkName 小组作业名
@@ -406,6 +497,49 @@ public class Controller {
     /* ----- ----- Homework ----- ----- */
 
     /**
+     * 查询本用户需要完成的所有任务
+     */
+    @RequestMapping(value = "/api/homework/get_all_user", method = RequestMethod.POST)
+    public String getThisUserAllHomeworks(@RequestParam("token") String token) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+        return Util.getOkResponse("获取成功", homeworkService.getAllHomeworksByUserName(user.getUsername()));
+    }
+
+    /**
+     * 查询本用户需要完成的所有任务和题目内容
+     */
+    @RequestMapping(value = "/api/homework/get_all_user_with_problem", method = RequestMethod.POST)
+    public String getThisUserAllHomeworksAndProblems(@RequestParam("token") String token) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+        List<HomeworkPojo> homeworks = homeworkService.getAllHomeworksByUserName(user.getUsername());
+
+        List<HashMap<String, String>> result = new java.util.ArrayList<>();
+        for (HomeworkPojo homework : homeworks) {
+            GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByUUID(homework.getGroupHomeworkUUID());
+            if(groupHomework == null) { return Util.getResponse(430, "奇妙♂的错误"); }
+
+            ProblemPojo problem = problemService.getProblemByUUID(groupHomework.getProblemUUID());
+            if (problem == null) { return Util.getResponse(430, "奇妙♂的错误"); }
+
+            String homeworkUUID = homework.getUuid();
+            result.add(new HashMap<String, String>() {{
+                put("homework", homeworkUUID);
+                put("problem", problem.getUuid());
+                put("problemName", problem.getName());
+                put("problemContent", problem.getContent());
+                put("problemStandardAnswer", problem.getStandardAnswer());
+                put("groupHomeworkName", groupHomework.getName());
+                put("submitDeadline", groupHomework.getSubmitDeadline().toString());
+                put("ratingDeadline", groupHomework.getRatingDeadline().toString());
+                put("answer", homework.getAnswer());
+            }});
+        }
+        return Util.getOkResponse("获取成功", result);
+    }
+
+    /**
      * 添加一条作业记录
      * @param token 提出请求的用户token
      * @param groupHomeworkName 小组作业名
@@ -423,16 +557,31 @@ public class Controller {
      * 设置一条作业记录的答案
      * @param token 提出请求的用户token
      * @param groupHomeworkName 小组作业名
-     * @param username 用户名
      * @param answer 答案
      * @return 结果
      */
     @RequestMapping(value = "/api/homework/set_answer", method = RequestMethod.POST)
     public String setHomeworkAnswer(@RequestParam("token") String token,
                                     @RequestParam("groupHomeworkName") String groupHomeworkName,
-                                    @RequestParam("username") String username,
                                     @RequestParam("answer") String answer) {
-        return "TODO";
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        // 通过token得到user实体
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        // 通过user实体来检验权限
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_STUDENT);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        HomeworkPojo homeworkPojo = homeworkService.getHomeworkByTwoName(groupHomeworkName, user.getUsername());
+
+        if(homeworkPojo == null) {
+            return Util.getResponse(422, "作业不存在");
+        } else {
+            homeworkService.updateAnswer(homeworkPojo.getUuid(), answer);
+            return Util.getOkResponse("修改成功");
+        }
     }
 
     /**

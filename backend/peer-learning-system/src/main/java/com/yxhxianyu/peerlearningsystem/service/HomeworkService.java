@@ -2,6 +2,7 @@ package com.yxhxianyu.peerlearningsystem.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yxhxianyu.peerlearningsystem.dao.HomeworkDao;
+import com.yxhxianyu.peerlearningsystem.dao.ProblemDao;
 import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +23,15 @@ public class HomeworkService {
 
     @Autowired
     HomeworkDao homeworkDao;
+
+    @Autowired
+    GroupHomeworkService groupHomeworkService;
+
+    @Autowired
+    ProblemService problemService;
+
+    @Autowired
+    UserService userService;
 
     /**
      * 增加一条作业
@@ -75,6 +85,16 @@ public class HomeworkService {
     }
 
     /**
+     * 根据GroupHomeworkName和UserName查询作业
+     */
+    @Nullable
+    public HomeworkPojo getHomeworkByTwoName(String groupHomeworkName, String userName) {
+        String groupHomeworkUUID = groupHomeworkService.getUUIDByName(groupHomeworkName);
+        String userUUID = userService.getUUIDByName(userName);
+        return homeworkDao.selectOne(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("userUUID", userUUID));
+    }
+
+    /**
      * 根据GroupHomeworkUUID和UserUUID查询UUID
      */
     public String getUUIDByTwoUUID(String groupHomeworkUUID, String userUUID) {
@@ -89,4 +109,11 @@ public class HomeworkService {
         return homeworkDao.selectList(new QueryWrapper<>());
     }
 
+    /**
+     * 根据用户名，查询该用户的所有作业
+     */
+    public List<HomeworkPojo> getAllHomeworksByUserName(String userName) {
+        String userUUID = userService.getUUIDByName(userName);
+        return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("userUUID", userUUID));
+    }
 }
