@@ -12,6 +12,7 @@ import com.yxhxianyu.peerlearningsystem.service.ProblemService;
 import com.yxhxianyu.peerlearningsystem.service.UserService;
 import com.yxhxianyu.peerlearningsystem.service.RatingService;
 import com.yxhxianyu.peerlearningsystem.utils.Util;
+import com.yxhxianyu.peerlearningsystem.utils.algo.TaskAllocationAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
+
+import static java.lang.Math.min;
 
 /**
  * @author YXH_XianYu
@@ -170,7 +173,7 @@ public class Controller {
         UserPojo user = userService.getUserByToken(token);
         if(user == null) { return Util.getResponse(401, "用户未登录"); }
 
-        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_STUDENT);
         if(result instanceof String) { return (String) result; }
         // ===== 权限验证基本步骤 结束 =====
 
@@ -632,6 +635,37 @@ public class Controller {
                             @RequestParam("ratingUsername") String ratingUsername,
                             @RequestParam("score") float score) {
         return "TODO";
+    }
+
+    /* ----- ----- Algorithm ----- ----- */
+
+    /**
+     * 互评任务分配算法（随机性构造性算法）
+     * @return 映射关系
+     */
+    @RequestMapping(value = "/api/algo/random", method = RequestMethod.POST)
+    public String random(@RequestParam("token") String token,
+                         @RequestParam("groupHomeworkName") String groupHomeworkName,
+                         @RequestParam("ratingNumber") int ratingNumber) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        // 通过token得到user实体
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        // 通过user实体来检验权限
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        GroupHomeworkPojo groupHomeworkPojo = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomeworkPojo == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+
+        int n = homeworkService.getAllHomeworksByGroupHomeworkUUID(groupHomeworkPojo.getUuid()).size();
+        int m = min(n - 1, ratingNumber);
+
+        return Util.getOkResponse("获取成功", TaskAllocationAlgorithm.allocateTasksRandom(n, m));
     }
 
 }

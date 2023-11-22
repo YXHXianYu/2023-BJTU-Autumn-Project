@@ -3,7 +3,7 @@
 
         <h1 style="text-align: center">提交作业</h1>
 
-        <el-table :data="tableData" stripe style="width: 100%" height="250" align="center" empty-text="权限不足">
+        <el-table :data="tableData" stripe style="width: 100%" height="250" align="center" empty-text="无需要提交的作业">
             <!-- <el-table-column prop="uuid" label="编号" width="180"> </el-table-column> -->
             <el-table-column prop="groupHomeworkName" label="题目名称" width="250"> </el-table-column>
             <el-table-column prop="submitDeadline" label="提交截止时间" width="100"> </el-table-column>

@@ -116,4 +116,11 @@ public class HomeworkService {
         String userUUID = userService.getUUIDByName(userName);
         return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("userUUID", userUUID));
     }
+
+    /**
+     * 根据GroupHomeworkUUID，查询匹配的的所有作业
+     */
+    public List<HomeworkPojo> getAllHomeworksByGroupHomeworkUUID(String groupHomeworkUUID) {
+        return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID));
+    }
 }
