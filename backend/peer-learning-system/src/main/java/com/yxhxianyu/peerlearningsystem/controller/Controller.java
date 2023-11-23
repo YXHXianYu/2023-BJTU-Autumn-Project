@@ -756,9 +756,9 @@ public class Controller {
             float haveRatingRatio = ratingService.getRatingRatioByHomeworkUUID(homework.getUuid());
             result.add(new HashMap<String, String>() {{
                 put("username", username);
-                put("averageScore", String.valueOf(averageScore));
-                put("checkedScore", String.valueOf(checkedScore));
-                put("haveRatingRatio", String.format("%.2f", haveRatingRatio)); // 给haveRatingRatio保留两位小数
+                put("averageScore", String.format("%.2f", averageScore));
+                put("checkedScore", String.format("%.2f", checkedScore));
+                put("haveRatingRatio", String.format("%.2f", haveRatingRatio));
             }});
         }
         return Util.getOkResponse("获取成功", result);
