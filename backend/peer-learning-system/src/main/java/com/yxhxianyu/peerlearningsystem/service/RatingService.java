@@ -82,4 +82,38 @@ public class RatingService {
         return ratingDao.selectList(new QueryWrapper<>());
     }
 
+    /**
+     * 根据UserUUID，获取所有需要完成的互评任务
+     */
+    public List<RatingPojo> getAllRatingsByUserUuid(String userUUID) {
+        return ratingDao.selectList(new QueryWrapper<RatingPojo>().eq("userUUID", userUUID).eq("score", -1.0f));
+    }
+
+    /**
+     * 根据RatingUUID，获取一条互评记录
+     */
+    public RatingPojo getRatingByUUID(String ratingUUID) {
+        return ratingDao.selectById(ratingUUID);
+    }
+
+    /**
+     * 根据HomeworkUUID，获取多条互评记录
+     */
+    public List<RatingPojo> getAllRatingsByHomeworkUUID(String homeworkUUID) {
+        return ratingDao.selectList(new QueryWrapper<RatingPojo>().eq("homeworkUUID", homeworkUUID));
+    }
+
+    /**
+     * 根据HomeworkUUID，查询所有分数不等于-1.0f的作业，占所有作业的比例
+     */
+    public float getRatingRatioByHomeworkUUID(String homeworkUUID) {
+        List<RatingPojo> ratings = getAllRatingsByHomeworkUUID(homeworkUUID);
+        int count = 0;
+        for (RatingPojo rating : ratings) {
+            if (rating.getScore() != -1.0f) {
+                count += 1;
+            }
+        }
+        return (ratings.size() == 0 ? 0.0f : (float) count / ratings.size());
+    }
 }

@@ -49,6 +49,13 @@ public class GroupHomeworkService {
     }
 
     /**
+     * 根据Pojo更新一个GroupHomework
+     */
+    public void updateGroupHomework(GroupHomeworkPojo pojo) {
+        groupHomeworkDao.updateById(pojo);
+    }
+
+    /**
      * 根据UUID删除一个GroupHomework
      */
     public void deleteGroupHomeworkByUUID(String uuid) {
@@ -92,6 +99,14 @@ public class GroupHomeworkService {
         if(pojo == null) return;
         pojo.setState(state);
         groupHomeworkDao.updateById(pojo);
+    }
+
+    /**
+     * 根据UUID获取State
+     */
+    public int getStateByUUID(String uuid) {
+        GroupHomeworkPojo pojo = groupHomeworkDao.selectById(uuid);
+        return (pojo == null ? -1 : pojo.getState());
     }
 
     /**

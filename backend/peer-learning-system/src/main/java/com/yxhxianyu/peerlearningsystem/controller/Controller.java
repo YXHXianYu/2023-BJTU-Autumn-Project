@@ -620,21 +620,184 @@ public class Controller {
     /* ----- ----- Rating ----- ----- */
 
     /**
-     * 添加一条评分记录
-     * @param token 提出请求的用户token
-     * @param groupHomeworkName 小组作业名
-     * @param username 用户名
-     * @param ratingUsername 评分用户名
-     * @param score 分数
-     * @return 结果
+     * 修改一条评分记录
      */
     @RequestMapping(value = "/api/rating/add", method = RequestMethod.POST)
     public String addRating(@RequestParam("token") String token,
-                            @RequestParam("groupHomeworkName") String groupHomeworkName,
-                            @RequestParam("username") String username,
-                            @RequestParam("ratingUsername") String ratingUsername,
+                            @RequestParam("ratingUUID") String ratingUUID,
                             @RequestParam("score") float score) {
-        return "TODO";
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_STUDENT);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        RatingPojo ratingPojo = ratingService.getRatingByUUID(ratingUUID);
+        if(ratingPojo == null) {
+            return Util.getResponse(422, "评分不存在");
+        }
+        if(ratingPojo.getScore() != -1.0f) {
+            return Util.getResponse(422, "评分已经提交");
+        }
+
+        ratingService.updateScore(ratingUUID, score);
+        return Util.getOkResponse("修改成功");
+    }
+
+    /**
+     * 给一个GroupHomework创建互评任务
+     */
+    @RequestMapping(value = "/api/rating/create", method = RequestMethod.POST)
+    public String createRatingTask(@RequestParam("token") String token,
+                                   @RequestParam("groupHomeworkName") String groupHomeworkName,
+                                   @RequestParam("ratingNumber") int ratingNumber) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        GroupHomeworkPojo groupHomeworkPojo = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomeworkPojo == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+
+        if(groupHomeworkPojo.getState() == 1) {
+            return Util.getResponse(422, "小组作业已经发布");
+        }
+        if(groupHomeworkPojo.getState() == 2) {
+            return Util.getResponse(422, "小组作业已经截至");
+        }
+
+        List<HomeworkPojo> allHomeworks = homeworkService.getAllHomeworksByGroupHomeworkUUID(groupHomeworkPojo.getUuid());
+        int n = allHomeworks.size();
+        int m = min(n - 1, ratingNumber);
+
+        List<List<Integer>> ratingTable = TaskAllocationAlgorithm.allocateTasksRandom(n, m);
+
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < m; j++) {
+                int ratingUsernameIndex = ratingTable.get(i).get(j);
+                String ratingUserUUID = allHomeworks.get(ratingUsernameIndex - 1).getUserUUID();
+                ratingService.insertRating(allHomeworks.get(i).getUuid(), ratingUserUUID, -1.0f);
+            }
+        }
+
+        groupHomeworkPojo.setState(1);
+        groupHomeworkService.updateGroupHomework(groupHomeworkPojo);
+
+        return Util.getOkResponse("创建成功");
+    }
+
+
+    /**
+     * 获取一个用户需要完成的所有互评任务和对应互评任务的题目内容
+     */
+    @RequestMapping(value = "/api/rating/get_all_rating_and_problem", method = RequestMethod.POST)
+    public String getThisUserAllRatingsAndProblems(@RequestParam("token") String token) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+        List<RatingPojo> ratings = ratingService.getAllRatingsByUserUuid(user.getUuid());
+
+        List<HashMap<String, String>> result = new java.util.ArrayList<>();
+        for (RatingPojo rating : ratings) {
+            HomeworkPojo homework = homeworkService.getHomeworkByUUID(rating.getHomeworkUUID());
+            if(homework == null) { return Util.getResponse(430, "奇妙♂的错误"); }
+
+            GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByUUID(homework.getGroupHomeworkUUID());
+            if(groupHomework == null) { return Util.getResponse(430, "奇妙♂的错误"); }
+
+            ProblemPojo problem = problemService.getProblemByUUID(groupHomework.getProblemUUID());
+            if (problem == null) { return Util.getResponse(430, "奇妙♂的错误"); }
+
+            String homeworkUUID = homework.getUuid();
+            result.add(new HashMap<String, String>() {{
+                put("uuid", rating.getUuid());
+                put("groupHomeworkName", groupHomework.getName());
+                put("problemName", problem.getName());
+                put("problemContent", problem.getContent());
+                put("problemStandardAnswer", problem.getStandardAnswer());
+                put("answer", homework.getAnswer());
+                put("score", String.valueOf(rating.getScore()));
+            }});
+        }
+        return Util.getOkResponse("获取成功", result);
+    }
+
+
+    /**
+     * 查看一个GroupHomework所有的学生和每个学生被互评任务的得分平均值
+     */
+    @RequestMapping(value = "/api/rating/get_all_students_and_score", method = RequestMethod.POST)
+    public String getAllRatings(@RequestParam("token") String token,
+                                @RequestParam("groupHomeworkName") String groupHomeworkName) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result_auth = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result_auth instanceof String) { return (String) result_auth; }
+
+        GroupHomeworkPojo groupHomeworkPojo = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomeworkPojo == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+
+        List<HomeworkPojo> allHomeworks = homeworkService.getAllHomeworksByGroupHomeworkUUID(groupHomeworkPojo.getUuid());
+        List<HashMap<String, String>> result = new java.util.ArrayList<>();
+        for (HomeworkPojo homework : allHomeworks) {
+            String userUUID = homework.getUserUUID();
+            String username = userService.getUserByUUID(userUUID).getUsername();
+            float averageScore = homeworkService.getAverageScoreByHomeworkUuidAndUserUuid(homework.getUuid(), userUUID);
+            float checkedScore = homeworkService.getCheckedScoreByUUID(homework.getUuid());
+            float haveRatingRatio = ratingService.getRatingRatioByHomeworkUUID(homework.getUuid());
+            result.add(new HashMap<String, String>() {{
+                put("username", username);
+                put("averageScore", String.valueOf(averageScore));
+                put("checkedScore", String.valueOf(checkedScore));
+                put("haveRatingRatio", String.format("%.2f", haveRatingRatio)); // 给haveRatingRatio保留两位小数
+            }});
+        }
+        return Util.getOkResponse("获取成功", result);
+    }
+
+    /**
+     * 根据GroupHomeworkUUID，截至一个互评任务
+     */
+    @RequestMapping(value = "/api/rating/finish", method = RequestMethod.POST)
+    public String finishRating(@RequestParam("token") String token,
+                               @RequestParam("groupHomeworkName") String groupHomeworkName) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result_auth = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result_auth instanceof String) { return (String) result_auth; }
+
+        GroupHomeworkPojo groupHomeworkPojo = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomeworkPojo == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+
+        if(groupHomeworkPojo.getState() == 0) {
+            return Util.getResponse(422, "小组作业尚未发布");
+        }
+        if(groupHomeworkPojo.getState() == 2) {
+            return Util.getResponse(422, "小组作业已经截至");
+        }
+
+        List<HomeworkPojo> allHomeworks = homeworkService.getAllHomeworksByGroupHomeworkUUID(groupHomeworkPojo.getUuid());
+        for (HomeworkPojo homework : allHomeworks) {
+            String userUUID = homework.getUserUUID();
+            float averageScore = homeworkService.getAverageScoreByHomeworkUuidAndUserUuid(homework.getUuid(), userUUID);
+            homeworkService.updateCheckedScore(homework.getUuid(), averageScore);
+        }
+
+        groupHomeworkService.updateState(groupHomeworkPojo.getUuid(), 2);
+
+        return Util.getOkResponse("截至成功");
     }
 
     /* ----- ----- Algorithm ----- ----- */

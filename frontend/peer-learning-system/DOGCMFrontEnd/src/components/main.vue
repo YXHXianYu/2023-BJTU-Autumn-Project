@@ -9,6 +9,7 @@
           <el-card align="center">
             <el-button class="button-margin" type="primary" size="medium" @click="problem" plain>题目管理</el-button>
             <el-button class="button-margin" type="primary" size="medium" @click="homework" plain>作业管理</el-button>
+            <el-button class="button-margin" type="primary" size="medium" @click="rating" plain>提交互评</el-button>
             <el-button class="button-margin" type="primary" size="medium" @click="sumbitHomework" plain>提交作业</el-button>
             <el-button class="button-margin" type="primary" size="medium" @click="registerProtectedUser" plain>注册受保护用户</el-button>
             <el-button class="button-margin" type="primary" size="medium" @click="logout" plain>登出</el-button>
@@ -34,6 +35,9 @@ export default {
         },
         homework() {
           this.$router.push('/homework')
+        },
+        rating() {
+          this.$router.push("/rating")
         },
         sumbitHomework() {
           this.$router.push("/submitHomework")

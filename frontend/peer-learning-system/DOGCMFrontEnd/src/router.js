@@ -39,6 +39,10 @@ const router = new Router({
             path: '/submitHomework',
             name: '提交作业',
             component: () => import('./components/submitHomework.vue')
+        }, {
+            path: '/rating',
+            name: '互评系统',
+            component: () => import('./components/rating.vue')
         }
     ]
 })

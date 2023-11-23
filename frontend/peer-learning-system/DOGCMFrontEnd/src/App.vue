@@ -32,7 +32,8 @@ body{
   border:0
 }
 #building {
-  background: url("~@/assets/余霞成绮 [4k].png");
+  /* background: url("~@/assets/余霞成绮 [4k].png"); */
+  background: url("~@/assets/bg.png");
   width: 100%;
   height: 100%;
   position:fixed;

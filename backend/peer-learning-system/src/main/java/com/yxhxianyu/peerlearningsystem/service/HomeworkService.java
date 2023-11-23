@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yxhxianyu.peerlearningsystem.dao.HomeworkDao;
 import com.yxhxianyu.peerlearningsystem.dao.ProblemDao;
 import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
+import com.yxhxianyu.peerlearningsystem.pojo.RatingPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -32,6 +33,9 @@ public class HomeworkService {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    RatingService ratingService;
 
     /**
      * 增加一条作业
@@ -122,5 +126,61 @@ public class HomeworkService {
      */
     public List<HomeworkPojo> getAllHomeworksByGroupHomeworkUUID(String groupHomeworkUUID) {
         return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID));
+    }
+
+    /**
+     * 根据UserUUID，查询匹配的所有作业
+     */
+    public List<HomeworkPojo> getAllHomeworksByUserUUID(String userUUID) {
+        return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("userUUID", userUUID));
+    }
+
+    /**
+     * 根据UserUUID，查询所有分数不等于-1.0f的匹配互评作业的分数均值
+     */
+    public float getAverageScoreByHomeworkUuidAndUserUuid(String homeworkUuid, String userUuid) {
+        List<RatingPojo> ratings = ratingService.getAllRatingsByHomeworkUUID(homeworkUuid);
+        float sum = 0.0f;
+        int count = 0;
+        for (RatingPojo rating : ratings) {
+            if (rating.getScore() != -1.0f) {
+                sum += rating.getScore();
+                count += 1;
+            }
+        }
+        return (count == 0 ? 0.0f : sum / count);
+    }
+
+    /**
+     * 根据输入的分数，更新作业的分数
+     */
+    public void updateCheckedScore(String uuid, float score) {
+        HomeworkPojo pojo = homeworkDao.selectById(uuid);
+        if (pojo == null) {
+            System.out.println("Update failed: homework not found");
+            return;
+        }
+        pojo.setCheckedScore(score);
+        homeworkDao.updateById(pojo);
+    }
+
+    /**
+     * 获取CheckedScore
+     */
+    public float getCheckedScoreByUUID(String uuid) {
+        HomeworkPojo pojo = homeworkDao.selectById(uuid);
+        if (pojo == null) {
+            System.out.println("Get failed: homework not found");
+            return -1.0f;
+        }
+        return pojo.getCheckedScore();
+    }
+
+    /**
+     * 根据GroupHomeworkUUID和UserUUID，查询匹配的唯一一条作业
+     */
+    @Nullable
+    public HomeworkPojo getHomeworkByGroupHomeworkUUIDAndUserUUID(String groupHomeworkUUID, String userUUID) {
+        return homeworkDao.selectOne(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("userUUID", userUUID));
     }
 }
