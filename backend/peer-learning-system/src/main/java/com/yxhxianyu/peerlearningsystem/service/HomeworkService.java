@@ -45,7 +45,7 @@ public class HomeworkService {
     public String insertHomework(String groupHomeworkUUID, String userUUID) {
         String uuid = UUID.randomUUID().toString();
         try {
-            homeworkDao.insert(new HomeworkPojo(uuid, groupHomeworkUUID, userUUID, "", false, false, 0.0f));
+            homeworkDao.insert(new HomeworkPojo(uuid, groupHomeworkUUID, userUUID, "", false, false, 0.0f, false, "", ""));
             return uuid;
         } catch (DuplicateKeyException e) {
             System.out.println("Insert failed: duplicate username");
@@ -182,5 +182,52 @@ public class HomeworkService {
     @Nullable
     public HomeworkPojo getHomeworkByGroupHomeworkUUIDAndUserUUID(String groupHomeworkUUID, String userUUID) {
         return homeworkDao.selectOne(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("userUUID", userUUID));
+    }
+
+    /**
+     * 设置isNeedToCheck
+     */
+    public void setIsNeedToCheck(String uuid, boolean isNeedToCheck, String recheckReason, String recheckDetailedReason) {
+        HomeworkPojo pojo = homeworkDao.selectById(uuid);
+        if (pojo == null) {
+            System.out.println("Update failed: homework not found");
+            return;
+        }
+        pojo.setIsNeedToCheck(isNeedToCheck);
+        pojo.setRecheckReason(recheckReason);
+        pojo.setRecheckDetailedReason(recheckDetailedReason);
+        homeworkDao.updateById(pojo);
+    }
+
+    /**
+     * 获取isNeedToCheck
+     */
+    public boolean getIsNeedToCheck(String uuid) {
+        HomeworkPojo pojo = homeworkDao.selectById(uuid);
+        if (pojo == null) {
+            System.out.println("Get failed: homework not found");
+            return false;
+        }
+        return pojo.getIsNeedToCheck();
+    }
+
+    /**
+     * 设置isExcellent
+     */
+    public void setIsExcellent(String uuid, boolean isExcellent) {
+        HomeworkPojo pojo = homeworkDao.selectById(uuid);
+        if (pojo == null) {
+            System.out.println("Update failed: homework not found");
+            return;
+        }
+        pojo.setIsExcellentHomework(isExcellent);
+        homeworkDao.updateById(pojo);
+    }
+
+    /**
+     * 根据GroupHomeworkUUID，获取该团队作业下的所有优秀作业
+     */
+    public List<HomeworkPojo> getAllExcellentHomeworksByGroupHomeworkUUID(String groupHomeworkUUID) {
+        return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("isExcellentHomework", true));
     }
 }

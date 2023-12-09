@@ -1,6 +1,7 @@
 package com.yxhxianyu.peerlearningsystem.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yxhxianyu.peerlearningsystem.dao.*;
 import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.ProblemPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
@@ -47,6 +48,21 @@ public class Controller {
 
     @Autowired
     RatingService ratingService;
+
+    @Autowired
+    HomeworkDao homeworkDao;
+
+    @Autowired
+    GroupHomeworkDao groupHomeworkDao;
+
+    @Autowired
+    ProblemDao problemDao;
+
+    @Autowired
+    RatingDao ratingDao;
+
+    @Autowired
+    UserDao userDao;
 
     /* ----- ----- User ----- ----- */
 
@@ -537,6 +553,7 @@ public class Controller {
                 put("submitDeadline", groupHomework.getSubmitDeadline().toString());
                 put("ratingDeadline", groupHomework.getRatingDeadline().toString());
                 put("answer", homework.getAnswer());
+                put("score", homework.getCheckedScore().toString());
             }});
         }
         return Util.getOkResponse("获取成功", result);
@@ -591,16 +608,60 @@ public class Controller {
      * 设置一条作业记录是否优秀
      * @param token 提出请求的用户token
      * @param groupHomeworkName 小组作业名
-     * @param username 用户名
-     * @param isExcellent 是否优秀
+     * @param studentUUID 学生UUID
      * @return 结果
      */
-    @RequestMapping(value = "/api/homework/set_is_excellent", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/excellent/set", method = RequestMethod.POST)
     public String setHomeworkIsExcellent(@RequestParam("token") String token,
                                          @RequestParam("groupHomeworkName") String groupHomeworkName,
-                                         @RequestParam("username") String username,
-                                         @RequestParam("isExcellent") boolean isExcellent) {
-        return "TODO";
+                                         @RequestParam("studentUUID") String studentUUID) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomework == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+        HomeworkPojo homework = homeworkService.getHomeworkByTwoUUID(groupHomework.getUuid(), studentUUID);
+        if(homework == null) {
+            return Util.getResponse(422, "作业不存在");
+        }
+
+        homeworkService.setIsExcellent(homework.getUuid(), true);
+        return Util.getOkResponse("设置成功");
+    }
+
+
+    /**
+     * 获取该GroupHomework的所有优秀作业（只包括答案），并且以列表的方式返回
+     */
+    @RequestMapping(value = "/api/excellent/get", method = RequestMethod.POST)
+    public String getExcellentHomeworks(@RequestParam("token") String token,
+                                        @RequestParam("groupHomeworkName") String groupHomeworkName) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result instanceof String) { return (String) result; }
+
+        GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByName(groupHomeworkName);
+        if(groupHomework == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+
+        List<HomeworkPojo> homeworks = homeworkService.getAllExcellentHomeworksByGroupHomeworkUUID(groupHomework.getUuid());
+        List<HashMap<String, String>> resultHomeworks = new java.util.ArrayList<>();
+        for(HomeworkPojo homework : homeworks) {
+            resultHomeworks.add(new HashMap<String, String>() {{
+                put("answer", homework.getAnswer());
+            }});
+        }
+        return Util.getOkResponse("获取成功", resultHomeworks);
     }
 
     /**
@@ -615,6 +676,38 @@ public class Controller {
                                    @RequestParam("groupHomeworkName") String groupHomeworkName,
                                    @RequestParam("username") String username) {
         return "TODO";
+    }
+
+    /**
+     * 申请复查
+     * @param token 提出请求的用户token
+     * @param homeworkUUID 需要修改的UUID
+     */
+    @RequestMapping(value = "/api/homework/request_recheck", method = RequestMethod.POST)
+    public String requestRecheck(@RequestParam("token") String token,
+                                 @RequestParam("homeworkUUID") String homeworkUUID,
+                                 @RequestParam("recheckReason") String recheckReason,
+                                 @RequestParam("recheckDetailedReason") String recheckDetailedReason) {
+        // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_STUDENT);
+        if(result instanceof String) { return (String) result; }
+        // ===== 权限验证基本步骤 结束 =====
+
+        HomeworkPojo homework = homeworkService.getHomeworkByUUID(homeworkUUID);
+        if (homework == null) {
+            return Util.getResponse(422, "作业不存在");
+        }
+        if (!(homework.getUserUUID().equals(user.getUuid()))) {
+            return Util.getResponse(422, "不能申请复查别人的作业");
+        }
+        if (homework.getCheckedScore() < 0) {
+            return Util.getResponse(422, "作业未被互评");
+        }
+        homeworkService.setIsNeedToCheck(homeworkUUID, true, recheckReason, recheckDetailedReason);
+        return Util.getOkResponse("申请成功");
     }
 
     /* ----- ----- Rating ----- ----- */
@@ -756,9 +849,13 @@ public class Controller {
             float haveRatingRatio = ratingService.getRatingRatioByHomeworkUUID(homework.getUuid());
             result.add(new HashMap<String, String>() {{
                 put("username", username);
+                put("userUUID", userUUID);
+                put("groupHomeworkName", groupHomeworkName);
                 put("averageScore", String.format("%.2f", averageScore));
                 put("checkedScore", String.format("%.2f", checkedScore));
                 put("haveRatingRatio", String.format("%.2f", haveRatingRatio));
+                put("isNeedToCheck", (homework.getIsNeedToCheck() ? "是" : "否"));
+                put("isExcellent", (homework.getIsExcellentHomework() ? "是" : "否"));
             }});
         }
         return Util.getOkResponse("获取成功", result);
@@ -798,6 +895,83 @@ public class Controller {
         groupHomeworkService.updateState(groupHomeworkPojo.getUuid(), 2);
 
         return Util.getOkResponse("截至成功");
+    }
+
+    /**
+     * 复查信息获取
+     */
+    @RequestMapping(value = "/api/recheck/get", method = RequestMethod.POST)
+    public String recheckGet(@RequestParam("token") String token,
+                             @RequestParam("groupHomeworkName") String groupHomeworkName,
+                             @RequestParam("studentUserUUID") String studentUserUUID) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result_auth = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result_auth instanceof String) { return (String) result_auth; }
+        
+        UserPojo student = userService.getUserByUUID(studentUserUUID);
+        if(student == null) {
+            return Util.getResponse(422, "学生不存在");
+        }
+        HomeworkPojo homework = homeworkService.getHomeworkByTwoName(groupHomeworkName, student.getUsername());
+        if(homework == null) {
+            return Util.getResponse(422, "作业不存在");
+        }
+        GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByUUID(homework.getGroupHomeworkUUID());
+        if(groupHomework == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+        ProblemPojo problem = problemService.getProblemByUUID(groupHomework.getProblemUUID());
+        if(problem == null) {
+            return Util.getResponse(422, "题目不存在");
+        }
+
+        HashMap<String, String> result = new HashMap<String, String>() {{
+            put("homeworkName", groupHomeworkName);
+            put("problemName", problem.getName());
+            put("problemContent", problem.getContent());
+            put("standardAnswer", problem.getStandardAnswer());
+            put("answer", homework.getAnswer());
+            put("recheckReason", homework.getRecheckReason());
+            put("recheckDetailedReason", homework.getRecheckDetailedReason());
+        }};
+        return Util.getOkResponse("获取成功", result);
+    }
+
+    /**
+     * 复查信息设置（设置分数）
+     */
+    @RequestMapping(value = "/api/recheck/set", method = RequestMethod.POST)
+    public String recheckSet(@RequestParam("token") String token,
+                             @RequestParam("groupHomeworkName") String groupHomeworkName,
+                             @RequestParam("studentUserUUID") String studentUserUUID,
+                             @RequestParam("score") float score) {
+        UserPojo user = userService.getUserByToken(token);
+        if(user == null) { return Util.getResponse(401, "用户未登录"); }
+
+        Object result_auth = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
+        if(result_auth instanceof String) { return (String) result_auth; }
+
+        UserPojo student = userService.getUserByUUID(studentUserUUID);
+        if(student == null) {
+            return Util.getResponse(422, "学生不存在");
+        }
+        HomeworkPojo homework = homeworkService.getHomeworkByTwoName(groupHomeworkName, student.getUsername());
+        if(homework == null) {
+            return Util.getResponse(422, "作业不存在");
+        }
+        GroupHomeworkPojo groupHomework = groupHomeworkService.getGroupHomeworkByUUID(homework.getGroupHomeworkUUID());
+        if(groupHomework == null) {
+            return Util.getResponse(422, "小组作业不存在");
+        }
+        ProblemPojo problem = problemService.getProblemByUUID(groupHomework.getProblemUUID());
+        if(problem == null) {
+            return Util.getResponse(422, "题目不存在");
+        }
+
+        homeworkService.updateCheckedScore(homework.getUuid(), score);
+        return Util.getOkResponse("修改成功");
     }
 
     /* ----- ----- Algorithm ----- ----- */

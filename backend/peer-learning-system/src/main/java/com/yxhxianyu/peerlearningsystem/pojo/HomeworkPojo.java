@@ -41,4 +41,12 @@ public class HomeworkPojo {
     @TableField(value = "checkedScore")
     private Float checkedScore;
 
+    @TableField(value = "isNeedToCheck")
+    private Boolean isNeedToCheck;
+
+    @TableField(value = "recheckReason")
+    private String recheckReason;
+
+    @TableField(value = "recheckDetailedReason")
+    private String recheckDetailedReason;
 }

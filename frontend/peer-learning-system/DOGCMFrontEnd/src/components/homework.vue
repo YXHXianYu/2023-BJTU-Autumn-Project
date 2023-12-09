@@ -54,7 +54,7 @@
 
             <el-form-item label="作业被评次数: " prop="students" style="margin-left: 30px; margin-right: 30px;">
                 <el-tooltip class="item" effect="dark" content="只有在 “发布互评任务” 时，才需要填写此表格" placement="bottom">
-                    <el-input-number v-model="ratingNumber" @change="handleChange" :min="1" :max="5" label=""></el-input-number>
+                    <el-input-number v-model="ratingNumber" :min="1" :max="5" label=""></el-input-number>
                 </el-tooltip>
             </el-form-item>
 
@@ -65,15 +65,53 @@
         </el-form>
 
         <el-dialog title="作业完成情况" :visible.sync="dialogFormVisible" width="70%" append-to-body>
-            <span>作业名称：{{dialogName}}</span><br><br>
-            <span>完成情况：</span><br><br>
+            <h2>作业名称：{{dialogName}}</h2><br>
+            <h2>完成情况：</h2><br>
 
             <el-table :data="studentsScore" style="width: 100%">
             <el-table-column prop="username" label="学生名" width="180"> </el-table-column>
             <el-table-column prop="averageScore" label="当前分数" width="180"> </el-table-column>
             <el-table-column prop="checkedScore" label="最终分数" width="180"> </el-table-column>
             <el-table-column prop="haveRatingRatio" label="已评分比例" width="180"> </el-table-column>
+            <el-table-column prop="isNeedToCheck" label="学生是否请求复查" width="180"> </el-table-column>
+            <el-table-column label="修改分数/复查" width="120">
+                <template slot-scope="scope">
+                    <el-button plain type="primary" size="small" @click="recheck(scope.row)">查看</el-button>
+                </template>
+            </el-table-column>
+            <el-table-column prop="isExcellent" label="是否为优秀作业" width="180"> </el-table-column>
+            <el-table-column label="设置为优秀作业" width="120">
+                <template slot-scope="scope">
+                    <el-button plain type="primary" size="small" @click="excellent(scope.row)">设置</el-button>
+                </template>
+            </el-table-column>
             </el-table>
+
+            <!-- <div v-html="dialogContent"></div><br> -->
+        </el-dialog>
+
+        <el-dialog title="修改分数/复查" :visible.sync="recheckVisible" width="70%" append-to-body>
+            <h2>作业名称</h2><br>
+            <div v-html="recheckData.homeworkName"></div><br>
+            <h2>题目名称</h2><br>
+            <div v-html="recheckData.problemName"></div><br>
+            <h2>题目内容</h2><br>
+            <div v-html="recheckData.problemContent"></div><br>
+            <h2>标准答案</h2><br>
+            <div v-html="recheckData.standardAnswer"></div><br>
+            <h2>学生答案</h2><br>
+            <div v-html="recheckData.answer"></div><br>
+            <h2>申请复查原因</h2><br>
+            <div v-html="recheckData.recheckReason"></div><br>
+            <h2>申请复查详细原因</h2><br>
+            <div v-html="recheckData.recheckDetailedReason"></div><br>
+
+            <div>
+            <h2>新的成绩</h2>
+            <el-slider v-model="recheckData.score"></el-slider>
+            </div><br>
+
+            <el-button plain type="primary" size="small" @click="recheck_update(recheckData)">更新分数</el-button>
 
             <!-- <div v-html="dialogContent"></div><br> -->
         </el-dialog>
@@ -107,6 +145,8 @@ export default {
             ratingNumber: 3,
             rules: {},
             studentsScore: [],
+            recheckVisible: false,
+            recheckData: {},
         }
     },
 
@@ -239,6 +279,72 @@ export default {
                 this.dialogFormVisible = true
                 this.dialogName = row.name
                 this.studentsScore = response.data.data
+            }).catch(error => {
+                window.console.log("error: ", error)
+            })
+        },
+        recheck(row) {
+            this.$axios({
+                url: 'http://localhost:8080/api/recheck/get',
+                method: 'post',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                data: qs.stringify({
+                    token: SessionStorageService.get('token'),
+                    groupHomeworkName: row.groupHomeworkName,
+                    studentUserUUID: row.userUUID,
+                }),
+            }).then(response => {
+                this.recheckVisible = true
+                this.recheckData = response.data.data
+                this.recheckData.groupHomeworkName = row.groupHomeworkName
+                this.recheckData.studentUserUUID = row.userUUID
+            }).catch(error => {
+                window.console.log("error: ", error)
+            })
+        },
+        recheck_update(recheckData) {
+            const that = this
+            this.$axios({
+                url: 'http://localhost:8080/api/recheck/set',
+                method: 'post',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                data: qs.stringify({
+                    token: SessionStorageService.get('token'),
+                    groupHomeworkName: recheckData.groupHomeworkName,
+                    studentUserUUID: recheckData.studentUserUUID,
+                    score: recheckData.score,
+                }),
+            }).then(response => {
+                window.alert(
+                    'code: ' + response.data.code + '\n' +
+                    'message: ' + response.data.message
+                )
+                if(response.data.code === 200) {
+                    that.$router.go(0)
+                }
+            }).catch(error => {
+                window.console.log("error: ", error)
+            })
+        },
+        excellent(row) {
+            const that = this
+            this.$axios({
+                url: 'http://localhost:8080/api/excellent/set',
+                method: 'post',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                data: qs.stringify({
+                    token: SessionStorageService.get('token'),
+                    groupHomeworkName: row.groupHomeworkName,
+                    studentUUID: row.userUUID,
+                }),
+            }).then(response => {
+                window.alert(
+                    'code: ' + response.data.code + '\n' +
+                    'message: ' + response.data.message
+                )
+                if(response.data.code === 200) {
+                    that.$router.go(0)
+                }
             }).catch(error => {
                 window.console.log("error: ", error)
             })
