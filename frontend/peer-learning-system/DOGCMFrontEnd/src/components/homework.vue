@@ -46,7 +46,20 @@
                 <el-date-picker v-model="form.ratingDeadline" type="date" placeholder=""></el-date-picker>
             </el-form-item>
 
-            <el-form-item label="选择学生: " prop="students" style="margin-left: 30px; margin-right: 30px;">
+            <!-- selectType selectedHomework-->
+
+            <el-tooltip class="item" effect="dark" content="是否直接选择一次作业的所有学生" placement="left">
+                <el-form-item label="快速选择: " prop="students" style="margin-left: 30px; margin-right: 30px;">
+                    <el-switch v-model="selectType" active-text="是" inactive-text="否"></el-switch>
+                </el-form-item>
+            </el-tooltip>
+
+            <el-form-item v-if="selectType" label="选择作业: " prop="selectHomework" style="margin-left: 30px; margin-right: 30px;">
+                <el-select v-model="selectedHomework" placeholder="请选择作业">
+                    <el-option v-for="item in tableData" :key="item.uuid" :label="item.name" :value="item.uuid"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item v-else label="选择学生: " prop="students" style="margin-left: 30px; margin-right: 30px;">
                 <el-select v-model="selectedUsers" multiple placeholder="请选择学生">
                     <el-option v-for="item in users" :key="item.uuid" :label="item.username" :value="item.uuid"></el-option>
                 </el-select>
@@ -80,9 +93,9 @@
                 </template>
             </el-table-column>
             <el-table-column prop="isExcellent" label="是否为优秀作业" width="180"> </el-table-column>
-            <el-table-column label="设置为优秀作业" width="120">
+            <el-table-column label="取反优秀作业状态" width="120">
                 <template slot-scope="scope">
-                    <el-button plain type="primary" size="small" @click="excellent(scope.row)">设置</el-button>
+                    <el-button plain type="primary" size="small" @click="excellent(scope.row)">取反</el-button>
                 </template>
             </el-table-column>
             </el-table>
@@ -131,7 +144,9 @@ export default {
             tableData: [],
             problems: [],
             users: [],
+            selectType: false,
             selectedUsers: [],
+            selectedHomework: "",
             form: {
                 groupHomeworkName: "",
                 problemName: "",
@@ -203,7 +218,9 @@ export default {
                     problemName: this.form.problemName,
                     submitDeadline: this.form.submitDeadline,
                     ratingDeadline: this.form.ratingDeadline,
+                    selectType: this.selectType,
                     students: JSON.stringify(this.selectedUsers),
+                    selectedHomework: this.selectedHomework,
                 }),
             }).then(response => {
                 window.console.log("state", response.data)
@@ -329,7 +346,7 @@ export default {
         excellent(row) {
             const that = this
             this.$axios({
-                url: 'http://localhost:8080/api/excellent/set',
+                url: 'http://localhost:8080/api/excellent/negation',
                 method: 'post',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 data: qs.stringify({

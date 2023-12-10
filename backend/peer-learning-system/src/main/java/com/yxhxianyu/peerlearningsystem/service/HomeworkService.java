@@ -5,12 +5,14 @@ import com.yxhxianyu.peerlearningsystem.dao.HomeworkDao;
 import com.yxhxianyu.peerlearningsystem.dao.ProblemDao;
 import com.yxhxianyu.peerlearningsystem.pojo.HomeworkPojo;
 import com.yxhxianyu.peerlearningsystem.pojo.RatingPojo;
+import com.yxhxianyu.peerlearningsystem.pojo.UserPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -229,5 +231,18 @@ public class HomeworkService {
      */
     public List<HomeworkPojo> getAllExcellentHomeworksByGroupHomeworkUUID(String groupHomeworkUUID) {
         return homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID).eq("isExcellentHomework", true));
+    }
+
+    /**
+     * 根据GroupHomeworkUUID，获取选该团队作业的所有学生的UUID
+     */
+    public List<String> getAllStudentsUUIDByGroupHomeworkUUID(String groupHomeworkUUID) {
+        return new ArrayList<>(){
+            {
+                for (HomeworkPojo homework : homeworkDao.selectList(new QueryWrapper<HomeworkPojo>().eq("groupHomeworkUUID", groupHomeworkUUID))) {
+                    add(homework.getUserUUID());
+                }
+            }
+        };
     }
 }

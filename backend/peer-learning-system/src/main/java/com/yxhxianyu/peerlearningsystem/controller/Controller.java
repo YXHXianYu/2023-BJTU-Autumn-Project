@@ -392,7 +392,9 @@ public class Controller {
                                       @RequestParam("problemName") String problemName,
                                       @RequestParam("submitDeadline") String submitDeadline,
                                       @RequestParam("ratingDeadline") String ratingDeadline,
-                                      @RequestParam("students") String studentsString) {
+                                      @RequestParam("selectType") boolean selectType,
+                                      @RequestParam("students") String studentsString,
+                                      @RequestParam("selectedHomework") String selectedHomework) {
         // ===== 权限验证基本步骤 开始 (输入 token; 输出 user实体 & 错误信息) =====
         // 通过token得到user实体
         UserPojo user = userService.getUserByToken(token);
@@ -402,14 +404,6 @@ public class Controller {
         Object result = Util.checkAuthority(user.getAuthority(), Util.AUTHORITY_TEACHER);
         if(result instanceof String) { return (String) result; }
         // ===== 权限验证基本步骤 结束 =====
-
-        ObjectMapper mapper = new ObjectMapper();
-        String[] students;
-        try {
-            students = mapper.readValue(studentsString, String[].class);
-        } catch (Exception e) {
-            return Util.getResponse(422, "学生名单格式错误");
-        }
 
         // System.out.println(submitDeadline);
         Date submitDeadlineDate;
@@ -425,14 +419,44 @@ public class Controller {
             return Util.getResponse(422, "评分截止日期格式错误");
         }
 
-        String problemUUID = problemService.getProblemByName(problemName).getUuid();
+        ProblemPojo problem = problemService.getProblemByName(problemName);
+        if(problem == null) {
+            return Util.getResponse(422, "题目不存在");
+        }
+        String problemUUID = problem.getUuid();
+
+        String[] students;
+        if(selectType) {
+            System.out.println("添加小组作业，选择类型为 \" 快速选择 \"，被选择作业为: " + selectedHomework);
+            List<String> studentsInList = homeworkService.getAllStudentsUUIDByGroupHomeworkUUID(selectedHomework);
+            students = new String[studentsInList.size()];
+            for(int i = 0; i < studentsInList.size(); i++) {
+                students[i] = studentsInList.get(i);
+            }
+        } else {
+            System.out.println("添加小组作业，选择类型为 \" 手动选择 \"");
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                students = mapper.readValue(studentsString, String[].class);
+            } catch (Exception e) {
+                return Util.getResponse(422, "学生名单格式错误");
+            }
+        }
+
+        if(students.length == 0) {
+            return Util.getResponse(422, "学生名单为空");
+        }
+
         String uuid = groupHomeworkService.insertGroupHomework(groupHomeworkName, problemUUID, submitDeadlineDate, ratingDeadlineDate);
         if(uuid.isEmpty()) {
             return Util.getResponse(422, "添加失败");
         } else {
+            System.out.print("添加小组作业，学生人数: " + students.length + "; 为: ");
             for(String student : students) {
                 homeworkService.insertHomework(uuid, student);
+                System.out.print(student + " ");
             }
+            System.out.println();
             return Util.getOkResponse("添加成功");
         }
     }
@@ -611,7 +635,7 @@ public class Controller {
      * @param studentUUID 学生UUID
      * @return 结果
      */
-    @RequestMapping(value = "/api/excellent/set", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/excellent/negation", method = RequestMethod.POST)
     public String setHomeworkIsExcellent(@RequestParam("token") String token,
                                          @RequestParam("groupHomeworkName") String groupHomeworkName,
                                          @RequestParam("studentUUID") String studentUUID) {
@@ -632,7 +656,7 @@ public class Controller {
             return Util.getResponse(422, "作业不存在");
         }
 
-        homeworkService.setIsExcellent(homework.getUuid(), true);
+        homeworkService.setIsExcellent(homework.getUuid(), !homework.getIsExcellentHomework()); // 取反
         return Util.getOkResponse("设置成功");
     }
 

@@ -140,5 +140,4 @@ public class GroupHomeworkService {
     public List<GroupHomeworkPojo> getAllGroupHomeworks() {
         return groupHomeworkDao.selectList(new QueryWrapper<>());
     }
-
 }
