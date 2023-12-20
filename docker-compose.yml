@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend/peer-learning-system
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend/peer-learning-system/DOGCMFrontEnd
+    ports:
+      - "80:80"
