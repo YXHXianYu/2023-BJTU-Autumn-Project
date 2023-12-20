@@ -1,14 +1,14 @@
 # 使用 OpenJDK 为基础镜像
-FROM openjdk:8-jdk-alpine
+FROM openjdk:17-jdk-slim
 
 # 设置工作目录
 WORKDIR /app
 
 # 将 Maven 项目复制到容器中
-COPY ./peer-learning-system .
+COPY . ./
 
 # 使用 Maven 构建应用
-RUN ./mvnw clean package
+RUN ./mvnw -s ./settings.xml clean install -DskipTests
 
 # 指定运行时的端口
 EXPOSE 8080

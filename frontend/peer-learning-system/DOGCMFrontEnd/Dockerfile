@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:14 AS build-stage
+FROM node:18
 
 WORKDIR /app
 
@@ -8,15 +8,9 @@ COPY package*.json ./
 RUN npm install
 
 # 构建应用
-COPY ./ .
-RUN npm run build
-
-# 运行阶段
-# FROM nginx:stable-alpine as production-stage
-
-# COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY ./ ./
 
 # 指定运行时的端口
-EXPOSE 80
+EXPOSE 10087
 
 CMD ["npm", "run", "serve"]

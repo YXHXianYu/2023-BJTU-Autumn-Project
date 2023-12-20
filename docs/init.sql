@@ -14,7 +14,7 @@
  Date: 20/12/2023 17:14:07
 */
 
-CREATE DATABASE peer_learning_system IF NOT EXISTS peer_learning_system;
+CREATE DATABASE IF NOT EXISTS peer_learning_system;
 USE peer_learning_system;
 
 SET NAMES utf8mb4;
