@@ -1,6 +1,31 @@
 version: '3.8'
 services:
+  backend:
+    build: ./backend/peer-learning-system
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/peer_learning_system
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=20021012
+    depends_on:
+      - db
+
   frontend:
     build: ./frontend/peer-learning-system/DOGCMFrontEnd
     ports:
       - "10087:10087"
+
+  db:
+    image: mysql:8.0.35
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=peer_learning_system
+      - MYSQL_ROOT_PASSWORD=20021012
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docs/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db-data:

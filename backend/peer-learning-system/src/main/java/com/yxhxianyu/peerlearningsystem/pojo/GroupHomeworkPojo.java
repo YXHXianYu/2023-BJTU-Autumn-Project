@@ -19,7 +19,7 @@ import java.sql.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName(value = "groupHomework")
+@TableName(value = "grouphomework")
 public class GroupHomeworkPojo {
 
     @TableId(value = "uuid", type = IdType.ASSIGN_ID)
