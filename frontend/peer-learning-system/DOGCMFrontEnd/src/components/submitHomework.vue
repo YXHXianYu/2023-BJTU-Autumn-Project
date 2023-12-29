@@ -24,6 +24,7 @@
                     <el-button plain type="primary" size="small" @click="excellent(scope.row)">查看</el-button>
                 </template>
             </el-table-column>
+            <el-table-column prop="isPublic" label="是否为公开作业" width="100"> </el-table-column>
         </el-table>
 
         <h1 style="text-align: center">添加作业</h1>
@@ -97,7 +98,15 @@ export default {
     data() {
         return {
             isLoading: false,
-            tableData: [],
+            tableData: [
+                {
+                    "groupHomeworkName": "二次元轻小说写作大赛",
+                    "submitDeadline": "2024/2/2",
+                    "ratingDeadline": "2024/2/29",
+                    "score": "Unsubmit",
+                    "isPublic": "是",
+                }
+            ],
             problems: [],
             users: [],
             selectedUsers: [],

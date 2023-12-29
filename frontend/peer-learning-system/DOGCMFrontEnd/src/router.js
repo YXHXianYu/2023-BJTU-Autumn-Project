@@ -47,13 +47,13 @@ const router = new Router({
     ]
 })
 
-router.beforeEach((to, from, next) => {
-    const token = sessionStorage.getItem('token')
-    if(token === null && to.path !== '/login' && to.path !== '/register') {
-        next('/login')
-    } else {
-        next()
-    }
-})
+// router.beforeEach((to, from, next) => {
+//     const token = sessionStorage.getItem('token')
+//     if(token === null && to.path !== '/login' && to.path !== '/register') {
+//         next('/login')
+//     } else {
+//         next()
+//     }
+// })
 
 export default router

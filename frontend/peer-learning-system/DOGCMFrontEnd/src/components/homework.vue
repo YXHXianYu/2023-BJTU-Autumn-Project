@@ -48,6 +48,12 @@
 
             <!-- selectType selectedHomework-->
 
+            <el-form-item label="公共作业: " prop="students" style="margin-left: 30px; margin-right: 30px;">
+                <el-tooltip class="item" effect="dark" content="将该作业设置为公共作业，所有用户均可完成" placement="right">
+                    <el-switch v-model="publicHomework" active-text="是" inactive-text="否"></el-switch>
+                </el-tooltip>
+            </el-form-item>
+
             <el-tooltip class="item" effect="dark" content="是否直接选择一次作业的所有学生" placement="left">
                 <el-form-item label="快速选择: " prop="students" style="margin-left: 30px; margin-right: 30px;">
                     <el-switch v-model="selectType" active-text="是" inactive-text="否"></el-switch>
@@ -145,6 +151,7 @@ export default {
             problems: [],
             users: [],
             selectType: false,
+            publicHomework: false,
             selectedUsers: [],
             selectedHomework: "",
             form: {
